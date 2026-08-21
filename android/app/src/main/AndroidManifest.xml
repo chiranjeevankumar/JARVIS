@@ -2,6 +2,14 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Allow AURA to discover installed apps that can be launched -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application
         android:theme="@style/AppTheme"
         android:label="AURA">
@@ -11,8 +19,8 @@
             android:exported="true">
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
         </activity>
