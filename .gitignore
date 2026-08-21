@@ -15,3 +15,8 @@ dist/
 
 # AURA runtime memory
 memory/data/
+
+# Android/Gradle
+android/.gradle/
+android/build/
+android/app/build/
