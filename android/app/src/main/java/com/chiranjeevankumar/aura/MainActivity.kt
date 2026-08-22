@@ -20,7 +20,7 @@ class MainActivity : Activity() {
     private val client = OkHttpClient()
 
     private val webhookUrl =
-        "https://chiruagent.app.n8n.cloud/webhook/aura-bridge-test"
+        "https://chiruagent.app.n8n.cloud/webhook/aura-v03"
 
     private lateinit var statusText: TextView
     private lateinit var commandInput: EditText
@@ -110,7 +110,7 @@ class MainActivity : Activity() {
             try {
 
                 val json = JSONObject()
-                json.put("message", command)
+                json.put("command", command)
 
                 val body = json.toString()
                     .toRequestBody(
