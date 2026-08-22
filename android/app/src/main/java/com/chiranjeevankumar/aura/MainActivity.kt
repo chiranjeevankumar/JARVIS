@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -18,7 +19,10 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import kotlin.concurrent.thread
 
-class MainActivity : Activity() {
+class MainActivity : Activity(), TextToSpeech.OnInitListener {
+
+    private lateinit var textToSpeech: TextToSpeech
+    private var ttsReady = false
 
     companion object {
         private const val REQUEST_RECORD_AUDIO = 1001
@@ -37,6 +41,11 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
 
         createInterface()
+
+        textToSpeech = TextToSpeech(
+            this,
+            this
+        )
     }
 
     private fun createInterface() {
@@ -241,6 +250,46 @@ class MainActivity : Activity() {
         }
     }
 
+    override fun onInit(status: Int) {
+
+        if (status == TextToSpeech.SUCCESS) {
+
+            val result = textToSpeech.setLanguage(
+                java.util.Locale.getDefault()
+            )
+
+            ttsReady =
+                result != TextToSpeech.LANG_MISSING_DATA &&
+                result != TextToSpeech.LANG_NOT_SUPPORTED
+
+            if (!ttsReady) {
+                statusText.text =
+                    "AURA\\n\\nText-to-Speech language unavailable."
+            }
+
+        } else {
+
+            ttsReady = false
+
+            statusText.text =
+                "AURA\\n\\nText-to-Speech initialization failed."
+        }
+    }
+
+    private fun speak(text: String) {
+
+        if (!ttsReady) {
+            return
+        }
+
+        textToSpeech.speak(
+            text,
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "AURA_TTS"
+        )
+    }
+
     private fun sendCommand(command: String) {
 
         thread {
@@ -376,6 +425,8 @@ class MainActivity : Activity() {
             runOnUiThread {
                 statusText.text =
                     "AURA\n\nOpened:\n$appName"
+
+                speak("Opening $appName")
             }
 
         } catch (e: Exception) {
@@ -387,4 +438,15 @@ class MainActivity : Activity() {
             }
         }
     }
+
+    override fun onDestroy() {
+
+        if (::textToSpeech.isInitialized) {
+            textToSpeech.stop()
+            textToSpeech.shutdown()
+        }
+
+        super.onDestroy()
+    }
+
 }
