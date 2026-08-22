@@ -1,9 +1,12 @@
 package com.chiranjeevankumar.aura
 
 import android.app.Activity
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -16,6 +19,11 @@ import org.json.JSONObject
 import kotlin.concurrent.thread
 
 class MainActivity : Activity() {
+
+    companion object {
+        private const val REQUEST_RECORD_AUDIO = 1001
+        private const val REQUEST_SPEECH = 1002
+    }
 
     private val client = OkHttpClient()
 
@@ -59,6 +67,15 @@ class MainActivity : Activity() {
             textSize = 18f
         }
 
+        val voiceButton = Button(this).apply {
+            text = "🎤 VOICE"
+            textSize = 18f
+        }
+
+        voiceButton.setOnClickListener {
+            startVoiceInput()
+        }
+
         statusText = TextView(this).apply {
             text = "Ready"
             textSize = 18f
@@ -91,6 +108,7 @@ class MainActivity : Activity() {
         )
 
         layout.addView(sendButton)
+        layout.addView(voiceButton)
 
         layout.addView(
             statusText,
@@ -101,6 +119,126 @@ class MainActivity : Activity() {
         )
 
         setContentView(layout)
+    }
+
+    private fun startVoiceInput() {
+
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+
+            requestPermissions(
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                REQUEST_RECORD_AUDIO
+            )
+
+            return
+        }
+
+        try {
+
+            val intent = Intent(
+                RecognizerIntent.ACTION_RECOGNIZE_SPEECH
+            ).apply {
+
+                putExtra(
+                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                )
+
+                putExtra(
+                    RecognizerIntent.EXTRA_LANGUAGE,
+                    java.util.Locale.getDefault()
+                )
+
+                putExtra(
+                    RecognizerIntent.EXTRA_PROMPT,
+                    "Speak your command"
+                )
+            }
+
+            startActivityForResult(
+                intent,
+                REQUEST_SPEECH
+            )
+
+        } catch (e: Exception) {
+
+            statusText.text =
+                "AURA\n\nSpeech recognition unavailable."
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+
+        super.onRequestPermissionsResult(
+            requestCode,
+            permissions,
+            grantResults
+        )
+
+        if (requestCode == REQUEST_RECORD_AUDIO) {
+
+            if (
+                grantResults.isNotEmpty() &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED
+            ) {
+
+                startVoiceInput()
+
+            } else {
+
+                statusText.text =
+                    "AURA\n\nMicrophone permission denied."
+            }
+        }
+    }
+
+    @Deprecated("Deprecated in Android API  Activity result handling")
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+
+        super.onActivityResult(
+            requestCode,
+            resultCode,
+            data
+        )
+
+        if (
+            requestCode == REQUEST_SPEECH &&
+            resultCode == RESULT_OK
+        ) {
+
+            val results =
+                data?.getStringArrayListExtra(
+                    RecognizerIntent.EXTRA_RESULTS
+                )
+
+            val command =
+                results?.firstOrNull()?.trim().orEmpty()
+
+            if (command.isNotEmpty()) {
+
+                commandInput.setText(command)
+
+                statusText.text =
+                    "AURA\n\nHeard:\n$command\n\nSending..."
+
+                sendCommand(command)
+
+            } else {
+
+                statusText.text =
+                    "AURA\n\nI didn't hear a command."
+            }
+        }
     }
 
     private fun sendCommand(command: String) {
