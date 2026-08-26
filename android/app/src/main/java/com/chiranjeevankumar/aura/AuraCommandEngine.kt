@@ -132,6 +132,51 @@ class AuraCommandEngine {
         }
 
         // ----------------------------------------------------
+        // TIME / DATE
+        // ----------------------------------------------------
+
+        val timeCommands = listOf(
+            "what time is it",
+            "tell me the time",
+            "what's the time",
+            "what is the time",
+            "current time"
+        )
+
+        val dateCommands = listOf(
+            "what is the date",
+            "what's the date",
+            "tell me the date",
+            "what date is it",
+            "today's date",
+            "todays date"
+        )
+
+        if (cleanCommand in timeCommands) {
+            val time = java.text.SimpleDateFormat(
+                "h:mm a",
+                java.util.Locale.getDefault()
+            ).format(java.util.Date())
+
+            return AuraActionResult(
+                action = AuraAction.ANSWER,
+                message = "The time is $time."
+            )
+        }
+
+        if (cleanCommand in dateCommands) {
+            val date = java.text.SimpleDateFormat(
+                "EEEE, d MMMM yyyy",
+                java.util.Locale.getDefault()
+            ).format(java.util.Date())
+
+            return AuraActionResult(
+                action = AuraAction.ANSWER,
+                message = "Today is $date."
+            )
+        }
+
+        // ----------------------------------------------------
         // UNKNOWN
         // ----------------------------------------------------
 
