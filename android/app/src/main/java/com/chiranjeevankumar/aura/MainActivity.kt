@@ -255,6 +255,21 @@ override fun onRequestPermissionsResult(
                 searchWeb(result.target)
             }
 
+            AuraAction.OPEN_NOTIFICATIONS -> {
+
+                statusText.text =
+                    "AURA\n\n${result.message}"
+
+                try {
+                    val intent = Intent("android.settings.NOTIFICATION_SETTINGS")
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("AURA", "Failed to open notification settings", e)
+                    statusText.text =
+                        "AURA\n\nUnable to open notifications."
+                }
+            }
+
             AuraAction.OPEN_SETTINGS -> {
 
                 statusText.text =

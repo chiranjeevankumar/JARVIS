@@ -72,6 +72,42 @@ class AuraCommandEngine {
         }
 
         // ----------------------------------------------------
+
+        // ----------------------------------------------------
+        // OPEN NOTIFICATIONS
+        // ----------------------------------------------------
+        //
+        // IMPORTANT:
+        // This must be checked BEFORE OPEN APP because
+        // commands such as "open notifications" begin with
+        // "open " and would otherwise be interpreted as
+        // an application name.
+        //
+        // Supported examples:
+        // open notifications
+        // notifications
+        // open notification panel
+        // show notifications
+        // show notification panel
+        // go to notifications
+        // ----------------------------------------------------
+
+        val notificationCommands = listOf(
+            "open notifications",
+            "notifications",
+            "open notification panel",
+            "show notifications",
+            "show notification panel",
+            "go to notifications"
+        )
+
+        if (cleanCommand in notificationCommands) {
+            return AuraActionResult(
+                action = AuraAction.OPEN_NOTIFICATIONS,
+                message = "Opening notifications."
+            )
+        }
+
         // OPEN APP
         // Examples:
         // open YouTube
@@ -225,6 +261,21 @@ class AuraCommandEngine {
         }
 
         // ----------------------------------------------------
+        // OPEN NOTIFICATIONS
+        // ----------------------------------------------------
+        //
+        // Supported examples:
+        // open notifications
+        // notifications
+        // open notification panel
+        // show notifications
+        // show notification panel
+        // go to notifications
+        // ----------------------------------------------------
+
+
+
+        // ----------------------------------------------------
         // UNKNOWN
         // ----------------------------------------------------
 
@@ -253,5 +304,6 @@ object AuraAction {
     const val SEARCH_WEB = "SEARCH_WEB"
     const val GO_HOME = "GO_HOME"
     const val OPEN_SETTINGS = "OPEN_SETTINGS"
+    const val OPEN_NOTIFICATIONS = "OPEN_NOTIFICATIONS"
     const val ANSWER = "ANSWER"
 }
