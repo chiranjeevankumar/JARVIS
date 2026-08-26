@@ -31,21 +31,58 @@ class AuraCommandEngine {
         // open Chrome
         // ----------------------------------------------------
 
-        val openPrefix = "open "
+        // ----------------------------------------------------
+        // NATURAL OPEN APP COMMANDS
+        //
+        // Supported examples:
+        // open YouTube
+        // launch YouTube
+        // start YouTube
+        // go to YouTube
+        // open the YouTube app
+        // please open YouTube
+        // ----------------------------------------------------
 
-        if (cleanCommand.startsWith(openPrefix)) {
+        val openPrefixes = listOf(
+            "open ",
+            "launch ",
+            "start ",
+            "go to ",
+            "please open ",
+            "please launch ",
+            "please start "
+        )
 
-            val appName = command
+        var appName: String? = null
+
+        for (prefix in openPrefixes) {
+            if (cleanCommand.startsWith(prefix)) {
+                appName = command
+                    .trim()
+                    .substring(prefix.length)
+                    .trim()
+
+                break
+            }
+        }
+
+        if (!appName.isNullOrEmpty()) {
+
+            var cleanedAppName = appName
                 .trim()
-                .substring(openPrefix.length)
-                .trim()
 
-            if (appName.isNotEmpty()) {
+            if (cleanedAppName.lowercase().endsWith(" app")) {
+                cleanedAppName = cleanedAppName
+                    .dropLast(4)
+                    .trim()
+            }
+
+            if (cleanedAppName.isNotEmpty()) {
 
                 return AuraActionResult(
                     action = AuraAction.OPEN_APP,
-                    target = appName,
-                    message = "Opening $appName"
+                    target = cleanedAppName,
+                    message = "Opening $cleanedAppName"
                 )
             }
         }

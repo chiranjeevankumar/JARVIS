@@ -1,5 +1,7 @@
 package com.chiranjeevankumar.aura
 
+import android.util.Log
+
 import android.net.Uri
 import java.net.URLEncoder
 
@@ -9,16 +11,13 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Build
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import kotlin.concurrent.thread
 
@@ -31,18 +30,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         private const val REQUEST_RECORD_AUDIO = 1001
         private const val REQUEST_SPEECH = 1002
     }
-
-    private val client = OkHttpClient()
-
-    // AURA v0.7 PART 1B-B
+// AURA v0.7 PART 1B-B
     // Native deterministic command engine.
     private val commandEngine = AuraCommandEngine()
-
-
-    private val webhookUrl =
-        "https://chiruagent.app.n8n.cloud/webhook/aura-v03"
-
-    private lateinit var statusText: TextView
+private lateinit var statusText: TextView
     private lateinit var commandInput: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,137 +47,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         )
     }
 
-    private fun createInterface() {
-
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(40, 70, 40, 40)
-        }
-
-        val title = TextView(this).apply {
-            text = "AURA"
-            textSize = 32f
-        }
-
-        val subtitle = TextView(this).apply {
-            text = "Personal AI Agent"
-            textSize = 18f
-        }
-
-        commandInput = EditText(this).apply {
-            hint = "Type your command..."
-            textSize = 18f
-            setSingleLine(true)
-        }
-
-        val sendButton = Button(this).apply {
-            text = "SEND"
-            textSize = 18f
-        }
-
-        val voiceButton = Button(this).apply {
-            text = "🎤 VOICE"
-            textSize = 18f
-        }
-
-        voiceButton.setOnClickListener {
-            startVoiceInput()
-        }
-
-        statusText = TextView(this).apply {
-            text = "Ready"
-            textSize = 18f
-            setPadding(0, 40, 0, 0)
-        }
-
-        sendButton.setOnClickListener {
-
-            val command = commandInput.text.toString().trim()
-
-            if (command.isEmpty()) {
-                statusText.text = "Please enter a command."
-                return@setOnClickListener
-            }
-
-            statusText.text = "AURA\n\nSending command..."
-
-            sendCommand(command)
-        }
-
-        layout.addView(title)
-        layout.addView(subtitle)
-
-        layout.addView(
-            commandInput,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        )
-
-        layout.addView(sendButton)
-        layout.addView(voiceButton)
-
-        layout.addView(
-            statusText,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        )
-
-        setContentView(layout)
-    }
-
-    private fun startVoiceInput() {
-
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-
-            requestPermissions(
-                arrayOf(Manifest.permission.RECORD_AUDIO),
-                REQUEST_RECORD_AUDIO
-            )
-
-            return
-        }
-
-        try {
-
-            val intent = Intent(
-                RecognizerIntent.ACTION_RECOGNIZE_SPEECH
-            ).apply {
-
-                putExtra(
-                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-                )
-
-                putExtra(
-                    RecognizerIntent.EXTRA_LANGUAGE,
-                    java.util.Locale.getDefault()
-                )
-
-                putExtra(
-                    RecognizerIntent.EXTRA_PROMPT,
-                    "Speak your command"
-                )
-            }
-
-            startActivityForResult(
-                intent,
-                REQUEST_SPEECH
-            )
-
-        } catch (e: Exception) {
-
-            statusText.text =
-                "AURA\n\nSpeech recognition unavailable."
-        }
-    }
-
-    override fun onRequestPermissionsResult(
+override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
         grantResults: IntArray
@@ -204,8 +65,6 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 grantResults.isNotEmpty() &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED
             ) {
-
-                startVoiceInput()
 
             } else {
 
@@ -284,6 +143,80 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
+
+    private fun createInterface() {
+
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(40, 70, 40, 40)
+        }
+
+        val title = TextView(this).apply {
+            text = "AURA"
+            textSize = 32f
+        }
+
+        val subtitle = TextView(this).apply {
+            text = "Personal AI Agent"
+            textSize = 18f
+        }
+
+        commandInput = EditText(this).apply {
+            hint = "Type your command..."
+            textSize = 18f
+            setSingleLine(true)
+        }
+
+        val sendButton = Button(this).apply {
+            text = "SEND"
+            textSize = 18f
+        }
+
+        statusText = TextView(this).apply {
+            text = "Ready"
+            textSize = 18f
+            setPadding(0, 40, 0, 0)
+        }
+
+        sendButton.setOnClickListener {
+
+            val command = commandInput.text.toString().trim()
+
+            if (command.isEmpty()) {
+                statusText.text = "Please enter a command."
+                return@setOnClickListener
+            }
+
+            statusText.text = "AURA\n\nSending command..."
+
+            sendCommand(command)
+        }
+
+        layout.addView(title)
+        layout.addView(subtitle)
+
+        layout.addView(
+            commandInput,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        layout.addView(sendButton)
+
+
+        layout.addView(
+            statusText,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        setContentView(layout)
+    }
+
     private fun speak(text: String) {
 
         if (!ttsReady) {
@@ -300,9 +233,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private fun sendCommand(command: String) {
 
-        // AURA v0.7 PART 1B-B
-        // Native commands are handled locally.
-        // OPEN_APP and SEARCH_WEB never go through n8n.
+        Log.d("AURA", "LOCAL COMMAND=$command")
 
         val result = commandEngine.process(command)
 
@@ -311,66 +242,31 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             AuraAction.OPEN_APP -> {
 
                 statusText.text =
-                    "AURA\\n\\n${result.message}"
+                    "AURA\n\n${result.message}"
 
                 openApp(result.target)
-
-                return
             }
 
             AuraAction.SEARCH_WEB -> {
 
                 statusText.text =
-                    "AURA\\n\\n${result.message}"
+                    "AURA\n\n${result.message}"
 
                 searchWeb(result.target)
-
-                return
             }
-        }
 
-        // Unknown commands temporarily use the
-        // existing n8n fallback.
+            AuraAction.ANSWER -> {
 
-        thread {
+                statusText.text =
+                    "AURA\n\n${result.message}"
 
-            try {
+                speak(result.message)
+            }
 
-                val json =
-                    "{\"message\":" +
-                    JSONObject.quote(command) +
-                    "}"
+            else -> {
 
-                val body = json.toRequestBody(
-                    "application/json; charset=utf-8".toMediaType()
-                )
-
-                val request = Request.Builder()
-                    .url(webhookUrl)
-                    .post(body)
-                    .build()
-
-                val response =
-                    client.newCall(request).execute()
-
-                val resultText =
-                    response.body?.string() ?: ""
-
-                runOnUiThread {
-
-                    statusText.text =
-                        "AURA\\n\\nn8n response:\\n$resultText"
-
-                    handleCommandResult(resultText)
-                }
-
-            } catch (e: Exception) {
-
-                runOnUiThread {
-
-                    statusText.text =
-                        "AURA\\n\\nConnection error:\\n${e.message}"
-                }
+                statusText.text =
+                    "AURA\n\n${result.message}"
             }
         }
     }
@@ -402,29 +298,6 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
-
-    private fun handleCommandResult(result: String) {
-
-        try {
-
-            val json = JSONObject(result)
-
-            val action =
-                json.optString("action")
-
-            val app =
-                json.optString("app")
-
-            if (action == "OPEN_APP" && app.isNotEmpty()) {
-
-                openApp(app)
-            }
-
-        } catch (_: Exception) {
-
-            // Response wasn't JSON.
-        }
-    }
 
     private fun openApp(appName: String) {
 
