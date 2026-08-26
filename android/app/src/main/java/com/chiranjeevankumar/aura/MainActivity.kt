@@ -255,6 +255,26 @@ override fun onRequestPermissionsResult(
                 searchWeb(result.target)
             }
 
+            AuraAction.OPEN_SETTINGS -> {
+
+                statusText.text =
+                    "AURA\n\n${result.message}"
+
+                try {
+                    val intent = Intent(
+                        android.provider.Settings.ACTION_SETTINGS
+                    )
+
+                    startActivity(intent)
+
+                } catch (e: Exception) {
+
+                    statusText.text =
+                        "AURA\n\nCould not open Settings.\n\n" +
+                        e.javaClass.simpleName
+                }
+            }
+
             AuraAction.GO_HOME -> {
 
                 statusText.text =

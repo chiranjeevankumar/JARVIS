@@ -48,6 +48,30 @@ class AuraCommandEngine {
         }
 
         // ----------------------------------------------------
+        // OPEN SETTINGS
+        //
+        // Supported examples:
+        // open settings
+        // settings
+        // go to settings
+        // open android settings
+        // ----------------------------------------------------
+
+        val settingsCommands = setOf(
+            "open settings",
+            "settings",
+            "go to settings",
+            "open android settings"
+        )
+
+        if (cleanCommand in settingsCommands) {
+            return AuraActionResult(
+                action = AuraAction.OPEN_SETTINGS,
+                message = "Opening Settings."
+            )
+        }
+
+        // ----------------------------------------------------
         // OPEN APP
         // Examples:
         // open YouTube
@@ -228,5 +252,6 @@ object AuraAction {
     const val OPEN_APP = "OPEN_APP"
     const val SEARCH_WEB = "SEARCH_WEB"
     const val GO_HOME = "GO_HOME"
+    const val OPEN_SETTINGS = "OPEN_SETTINGS"
     const val ANSWER = "ANSWER"
 }
