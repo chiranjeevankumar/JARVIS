@@ -255,6 +255,21 @@ override fun onRequestPermissionsResult(
                 searchWeb(result.target)
             }
 
+            AuraAction.GO_HOME -> {
+
+                statusText.text =
+                    "AURA\n\n${result.message}"
+
+                val homeIntent = Intent(
+                    Intent.ACTION_MAIN
+                ).apply {
+                    addCategory(Intent.CATEGORY_HOME)
+                    addCategory(Intent.CATEGORY_DEFAULT)
+                }
+
+                startActivity(homeIntent)
+            }
+
             AuraAction.ANSWER -> {
 
                 statusText.text =

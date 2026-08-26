@@ -24,6 +24,30 @@ class AuraCommandEngine {
         }
 
         // ----------------------------------------------------
+        // GO HOME
+        //
+        // Supported examples:
+        // go home
+        // home
+        // take me home
+        // go to home screen
+        // ----------------------------------------------------
+
+        val homeCommands = setOf(
+            "go home",
+            "home",
+            "take me home",
+            "go to home screen"
+        )
+
+        if (cleanCommand in homeCommands) {
+            return AuraActionResult(
+                action = AuraAction.GO_HOME,
+                message = "Going home."
+            )
+        }
+
+        // ----------------------------------------------------
         // OPEN APP
         // Examples:
         // open YouTube
@@ -203,5 +227,6 @@ object AuraAction {
 
     const val OPEN_APP = "OPEN_APP"
     const val SEARCH_WEB = "SEARCH_WEB"
+    const val GO_HOME = "GO_HOME"
     const val ANSWER = "ANSWER"
 }
