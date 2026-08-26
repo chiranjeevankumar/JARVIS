@@ -1,5 +1,8 @@
 package com.chiranjeevankumar.aura
 
+import android.net.Uri
+import java.net.URLEncoder
+
 import android.app.Activity
 import android.Manifest
 import android.content.ActivityNotFoundException
@@ -30,6 +33,11 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private val client = OkHttpClient()
+
+    // AURA v0.7 PART 1B-B
+    // Native deterministic command engine.
+    private val commandEngine = AuraCommandEngine()
+
 
     private val webhookUrl =
         "https://chiruagent.app.n8n.cloud/webhook/aura-v03"
@@ -292,36 +300,68 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private fun sendCommand(command: String) {
 
+        // AURA v0.7 PART 1B-B
+        // Native commands are handled locally.
+        // OPEN_APP and SEARCH_WEB never go through n8n.
+
+        val result = commandEngine.process(command)
+
+        when (result.action) {
+
+            AuraAction.OPEN_APP -> {
+
+                statusText.text =
+                    "AURA\\n\\n${result.message}"
+
+                openApp(result.target)
+
+                return
+            }
+
+            AuraAction.SEARCH_WEB -> {
+
+                statusText.text =
+                    "AURA\\n\\n${result.message}"
+
+                searchWeb(result.target)
+
+                return
+            }
+        }
+
+        // Unknown commands temporarily use the
+        // existing n8n fallback.
+
         thread {
 
             try {
 
-                val json = JSONObject()
-                json.put("command", command)
+                val json =
+                    "{\"message\":" +
+                    JSONObject.quote(command) +
+                    "}"
 
-                val body = json.toString()
-                    .toRequestBody(
-                        "application/json".toMediaType()
-                    )
+                val body = json.toRequestBody(
+                    "application/json; charset=utf-8".toMediaType()
+                )
 
                 val request = Request.Builder()
                     .url(webhookUrl)
                     .post(body)
                     .build()
 
-                val response = client
-                    .newCall(request)
-                    .execute()
+                val response =
+                    client.newCall(request).execute()
 
-                val result =
+                val resultText =
                     response.body?.string() ?: ""
 
                 runOnUiThread {
 
                     statusText.text =
-                        "AURA\n\nn8n response:\n$result"
+                        "AURA\\n\\nn8n response:\\n$resultText"
 
-                    handleCommandResult(result)
+                    handleCommandResult(resultText)
                 }
 
             } catch (e: Exception) {
@@ -329,11 +369,39 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 runOnUiThread {
 
                     statusText.text =
-                        "AURA\n\nConnection error:\n${e.message}"
+                        "AURA\\n\\nConnection error:\\n${e.message}"
                 }
             }
         }
     }
+
+    private fun searchWeb(query: String) {
+
+        try {
+
+            val encodedQuery =
+                URLEncoder.encode(
+                    query,
+                    "UTF-8"
+                )
+
+            val url =
+                "https://www.google.com/search?q=$encodedQuery"
+
+            val intent = Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(url)
+            )
+
+            startActivity(intent)
+
+        } catch (e: Exception) {
+
+            statusText.text =
+                "AURA\\n\\nUnable to open search:\\n${e.message}"
+        }
+    }
+
 
     private fun handleCommandResult(result: String) {
 
