@@ -326,6 +326,19 @@ override fun onRequestPermissionsResult(
                 startActivity(homeIntent)
             }
 
+            AuraAction.TIME -> {
+                val currentTime = java.text.SimpleDateFormat(
+                    "h:mm a",
+                    java.util.Locale.getDefault()
+                ).format(java.util.Date())
+
+                android.widget.Toast.makeText(
+                    this,
+                    "The time is $currentTime",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+
             AuraAction.ANSWER -> {
 
                 statusText.text =
