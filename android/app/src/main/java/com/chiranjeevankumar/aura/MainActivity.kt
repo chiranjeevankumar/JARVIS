@@ -255,6 +255,27 @@ override fun onRequestPermissionsResult(
                 searchWeb(result.target)
             }
 
+            AuraAction.OPEN_QUICK_SETTINGS -> {
+                statusText.text =
+                    "AURA\n\n${result.message}"
+
+                try {
+                    startActivity(
+                        Intent("android.settings.panel.action.INTERNET_CONNECTIVITY")
+                    )
+                } catch (e: Exception) {
+                    Log.e("AURA", "Quick Settings panel failed", e)
+
+                    try {
+                        startActivity(
+                            Intent(android.provider.Settings.ACTION_SETTINGS)
+                        )
+                    } catch (fallback: Exception) {
+                        Log.e("AURA", "Settings fallback failed", fallback)
+                    }
+                }
+            }
+
             AuraAction.OPEN_NOTIFICATIONS -> {
 
                 statusText.text =

@@ -92,6 +92,35 @@ class AuraCommandEngine {
         // go to notifications
         // ----------------------------------------------------
 
+        // ----------------------------------------------------
+        // OPEN QUICK SETTINGS
+        // ----------------------------------------------------
+        //
+        // Supported examples:
+        // open quick settings
+        // quick settings
+        // open quick panel
+        // show quick settings
+        // show quick panel
+        // go to quick settings
+        // ----------------------------------------------------
+
+        val quickSettingsCommands = listOf(
+            "open quick settings",
+            "quick settings",
+            "open quick panel",
+            "show quick settings",
+            "show quick panel",
+            "go to quick settings"
+        )
+
+        if (cleanCommand in quickSettingsCommands) {
+            return AuraActionResult(
+                action = AuraAction.OPEN_QUICK_SETTINGS,
+                message = "Opening quick settings."
+            )
+        }
+
         val notificationCommands = listOf(
             "open notifications",
             "notifications",
@@ -305,5 +334,6 @@ object AuraAction {
     const val GO_HOME = "GO_HOME"
     const val OPEN_SETTINGS = "OPEN_SETTINGS"
     const val OPEN_NOTIFICATIONS = "OPEN_NOTIFICATIONS"
+    const val OPEN_QUICK_SETTINGS = "OPEN_QUICK_SETTINGS"
     const val ANSWER = "ANSWER"
 }
