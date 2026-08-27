@@ -35,6 +35,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private val commandEngine = AuraCommandEngine()
 private lateinit var statusText: TextView
     private lateinit var commandInput: EditText
+    private lateinit var voiceInputButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -167,6 +168,36 @@ override fun onRequestPermissionsResult(
             setSingleLine(true)
         }
 
+        voiceInputButton = Button(this).apply {
+            text = "🎙️ Voice Input"
+            textSize = 18f
+        }
+
+        voiceInputButton.setOnClickListener {
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(
+                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                )
+                putExtra(
+                    RecognizerIntent.EXTRA_LANGUAGE,
+                    java.util.Locale.getDefault()
+                )
+                putExtra(
+                    RecognizerIntent.EXTRA_PROMPT,
+                    "Speak your command"
+                )
+            }
+
+            try {
+                statusText.text = "AURA\n\nListening..."
+                startActivityForResult(intent, REQUEST_SPEECH)
+            } catch (e: Exception) {
+                statusText.text =
+                    "AURA\n\nSpeech recognition is not available."
+            }
+        }
+
         val sendButton = Button(this).apply {
             text = "SEND"
             textSize = 18f
@@ -204,6 +235,7 @@ override fun onRequestPermissionsResult(
         )
 
         layout.addView(sendButton)
+        layout.addView(voiceInputButton)
 
 
         layout.addView(
