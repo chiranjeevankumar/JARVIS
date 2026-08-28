@@ -343,6 +343,14 @@ override fun onRequestPermissionsResult(
                 }
             }
 
+            AuraAction.GO_BACK -> {
+
+                statusText.text =
+                    "AURA\n\n${result.message}"
+
+                onBackPressed()
+            }
+
             AuraAction.GO_HOME -> {
 
                 statusText.text =

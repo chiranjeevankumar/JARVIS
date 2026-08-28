@@ -407,6 +407,19 @@ class AuraCommandEngine {
         }
 
         // --------------------------------------------------------
+        // GO BACK — NATURAL LANGUAGE NORMALIZATION
+        // --------------------------------------------------------
+        if (
+            command == "go to previous screen" ||
+            command == "return to previous screen" ||
+            command == "take me to the previous screen" ||
+            command == "go to the previous screen" ||
+            command == "return to the previous screen"
+        ) {
+            return "go back"
+        }
+
+        // --------------------------------------------------------
         // HOME
         // --------------------------------------------------------
 
