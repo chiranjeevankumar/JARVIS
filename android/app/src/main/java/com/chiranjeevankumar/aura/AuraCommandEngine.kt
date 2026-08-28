@@ -486,6 +486,34 @@ class AuraCommandEngine {
         }
 
         // --------------------------------------------------------
+        // PHASE 3 STEP 4 ROUTING FIX
+        // --------------------------------------------------------
+        // Special device-navigation commands must be resolved
+        // BEFORE generic app phrases such as "bring up ".
+        //
+        // Example:
+        // "bring up the notification panel"
+        // must become:
+        // "open notifications"
+        // --------------------------------------------------------
+
+        if (
+            command == "bring up the notification panel" ||
+            command == "open the notification panel" ||
+            command == "show the notification panel"
+        ) {
+            return "open notifications"
+        }
+
+        if (
+            command == "bring up the quick settings panel" ||
+            command == "open the quick settings panel" ||
+            command == "show the quick settings panel"
+        ) {
+            return "open quick settings"
+        }
+
+        // --------------------------------------------------------
         // OPEN APP
         // --------------------------------------------------------
 
@@ -595,6 +623,197 @@ class AuraCommandEngine {
         )
 
         for (prefix in searchPrefixes) {
+            if (command.startsWith(prefix)) {
+                val query = command
+                    .removePrefix(prefix)
+                    .trim()
+
+                if (query.isNotEmpty()) {
+                    return "search $query"
+                }
+            }
+        }
+
+
+        // --------------------------------------------------------
+        // PHASE 3 STEP 4 — NATURAL DEVICE COMMANDS
+        // --------------------------------------------------------
+        //
+        // These phrases are normalized into the deterministic
+        // commands already handled by process().
+        //
+        // No Android action is executed here.
+        // --------------------------------------------------------
+
+        // HOME
+        val naturalHomePhrases = setOf(
+            "take me back home",
+            "bring me back home",
+            "send me home",
+            "send me back home",
+            "return me home",
+            "return me back home",
+            "take me back to home",
+            "take me back to the home",
+            "take me back to the home screen",
+            "bring me back to the home screen",
+            "send me to the home screen",
+            "send me back to the home screen",
+            "return me to the home screen",
+            "put me on the home screen",
+            "get me back to the home screen",
+            "get me back home"
+        )
+
+        if (command in naturalHomePhrases) {
+            return "go home"
+        }
+
+        // SETTINGS
+        val naturalSettingsPhrases = setOf(
+            "take me into settings",
+            "take me into the settings",
+            "bring up settings",
+            "bring up the settings",
+            "bring up device settings",
+            "bring up the device settings",
+            "bring up system settings",
+            "bring up the system settings",
+            "show me settings",
+            "show me the settings",
+            "show me device settings",
+            "show me system settings",
+            "get me into settings",
+            "get me into the settings",
+            "switch to settings",
+            "switch over to settings",
+            "open up settings",
+            "open up the settings"
+        )
+
+        if (command in naturalSettingsPhrases) {
+            return "open settings"
+        }
+
+        // NOTIFICATIONS
+        val naturalNotificationPhrases = setOf(
+            "show my notifications",
+            "show me my notifications",
+            "bring up my notifications",
+            "bring up the notifications",
+            "bring up the notification panel",
+            "bring up my notification panel",
+            "show my notification panel",
+            "show me my notification panel",
+            "show me the notification panel",
+            "take me to my notifications",
+            "take me to the notifications",
+            "take me to the notification panel",
+            "open up notifications",
+            "open up the notification panel",
+            "pull down my notifications",
+            "pull down the notification panel",
+            "pull down notifications"
+        )
+
+        if (command in naturalNotificationPhrases) {
+            return "open notifications"
+        }
+
+        // QUICK SETTINGS
+        val naturalQuickSettingsPhrases = setOf(
+            "show my quick settings",
+            "show me my quick settings",
+            "bring up quick settings",
+            "bring up the quick settings",
+            "bring up the quick settings panel",
+            "show the quick settings panel",
+            "show me the quick settings panel",
+            "open up quick settings",
+            "open up the quick settings",
+            "take me to quick settings",
+            "take me to the quick settings",
+            "take me to the quick settings panel",
+            "pull down quick settings",
+            "pull down the quick settings",
+            "pull down the quick settings panel"
+        )
+
+        if (command in naturalQuickSettingsPhrases) {
+            return "open quick settings"
+        }
+
+        // TIME
+        val naturalTimePhrases = setOf(
+            "what time do we have",
+            "what time do we have now",
+            "what time is it now",
+            "tell me what time it is",
+            "tell me the current time",
+            "tell me the time",
+            "can you tell me the time",
+            "could you tell me the time",
+            "do you know the time",
+            "do you know what time it is",
+            "give me the time",
+            "give me the current time",
+            "show me the time",
+            "show me the current time",
+            "what is the current time",
+            "whats the current time"
+        )
+
+        if (command in naturalTimePhrases) {
+            return "what time is it"
+        }
+
+        // DATE
+        val naturalDatePhrases = setOf(
+            "what day is today",
+            "what day is it today",
+            "tell me what day it is",
+            "tell me today's date",
+            "tell me todays date",
+            "tell me the date",
+            "can you tell me the date",
+            "could you tell me the date",
+            "do you know today's date",
+            "do you know todays date",
+            "give me today's date",
+            "give me todays date",
+            "give me the date",
+            "show me today's date",
+            "show me todays date",
+            "show me the date",
+            "what is today's date",
+            "what is todays date",
+            "whats today's date",
+            "whats todays date"
+        )
+
+        if (command in naturalDatePhrases) {
+            return "what's the date"
+        }
+
+        // WEB SEARCH
+        val naturalSearchPrefixes = listOf(
+            "look something up online ",
+            "look something up on the internet ",
+            "search something online for ",
+            "search something on the internet for ",
+            "find something online about ",
+            "find something on the web about ",
+            "find something on the internet about ",
+            "do a search for ",
+            "do a web search ",
+            "do an internet search for ",
+            "can you find ",
+            "could you find ",
+            "can you search the web for ",
+            "could you search the web for "
+        )
+
+        for (prefix in naturalSearchPrefixes) {
             if (command.startsWith(prefix)) {
                 val query = command
                     .removePrefix(prefix)
