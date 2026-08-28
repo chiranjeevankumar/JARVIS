@@ -493,7 +493,7 @@ class AuraVoiceService : Service() {
         )
 
         val result =
-            commandEngine.process(command)
+            commandEngine.processNaturalLanguage(command)
 
         Log.d(
             TAG,

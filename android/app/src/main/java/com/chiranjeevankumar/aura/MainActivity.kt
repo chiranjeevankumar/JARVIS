@@ -267,7 +267,7 @@ override fun onRequestPermissionsResult(
 
         Log.d("AURA", "LOCAL COMMAND=$command")
 
-        val result = commandEngine.process(command)
+        val result = commandEngine.processNaturalLanguage(command)
 
         when (result.action) {
 

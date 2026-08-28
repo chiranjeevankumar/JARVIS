@@ -313,6 +313,277 @@ class AuraCommandEngine {
             message = "I don't understand that command yet."
         )
     }
+    
+    /**
+     * Phase 2 natural-language normalization.
+     *
+     * Converts common conversational instructions into the
+     * deterministic commands already understood by process().
+     *
+     * This method does NOT execute Android actions.
+     */
+    private fun normalizeCommand(input: String): String {
+        return input
+            .trim()
+            .lowercase()
+            .replace(Regex("[.!?,]+"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+    }
+
+    /**
+     * Removes conversational prefixes and wake-word phrases.
+     */
+    private fun removePolitePrefix(input: String): String {
+        var command = input.trim()
+
+        val prefixes = listOf(
+            "hey jarvis ",
+            "hey aura ",
+            "jarvis ",
+            "aura ",
+            "please ",
+            "can you ",
+            "could you ",
+            "would you ",
+            "will you ",
+            "kindly "
+        )
+
+        var changed = true
+
+        while (changed) {
+            changed = false
+
+            for (prefix in prefixes) {
+                if (command.startsWith(prefix)) {
+                    command = command.removePrefix(prefix).trim()
+                    changed = true
+                    break
+                }
+            }
+        }
+
+        return command
+    }
+
+    /**
+     * Understands common natural-language commands and converts
+     * them into the deterministic command vocabulary used by process().
+     */
+    fun understandNaturalLanguage(input: String): String {
+        var command = normalizeCommand(input)
+        command = removePolitePrefix(command)
+
+        if (command.isEmpty()) {
+            return command
+        }
+
+        // --------------------------------------------------------
+        // HOME
+        // --------------------------------------------------------
+
+        val homeCommands = setOf(
+            "home",
+            "go home",
+            "go back home",
+            "take me home",
+            "take me back home",
+            "go to home",
+            "go to the home",
+            "go to home screen",
+            "go to the home screen",
+            "take me to the home screen",
+            "return home",
+            "bring me home"
+        )
+
+        if (command in homeCommands) {
+            return "go home"
+        }
+
+        if (
+            command.contains("go back to the home screen") ||
+            command.contains("go back home screen") ||
+            command.contains("return to the home screen") ||
+            command.contains("take me back to the home screen")
+        ) {
+            return "go home"
+        }
+
+        // --------------------------------------------------------
+        // SETTINGS
+        // --------------------------------------------------------
+
+        val settingsCommands = setOf(
+            "settings",
+            "open settings",
+            "go to settings",
+            "go to the settings",
+            "open the settings",
+            "open android settings",
+            "go to android settings",
+            "take me to settings",
+            "take me to the settings",
+            "take me to android settings",
+            "open device settings",
+            "go to device settings",
+            "open system settings",
+            "go to system settings"
+        )
+
+        if (command in settingsCommands) {
+            return "open settings"
+        }
+
+        if (
+            command.contains("take me to settings") ||
+            command.contains("take me to the settings") ||
+            command.contains("go to the settings") ||
+            command.contains("open the settings") ||
+            command.contains("open android settings") ||
+            command.contains("go to android settings") ||
+            command.contains("device settings") ||
+            command.contains("system settings")
+        ) {
+            return "open settings"
+        }
+
+        // --------------------------------------------------------
+        // NOTIFICATIONS
+        // --------------------------------------------------------
+
+        val notificationCommands = setOf(
+            "notifications",
+            "open notifications",
+            "show notifications",
+            "open notification panel",
+            "show notification panel",
+            "go to notifications",
+            "open the notification panel",
+            "show the notification panel"
+        )
+
+        if (command in notificationCommands) {
+            return "open notifications"
+        }
+
+        // --------------------------------------------------------
+        // QUICK SETTINGS
+        // --------------------------------------------------------
+
+        val quickSettingsCommands = setOf(
+            "quick settings",
+            "open quick settings",
+            "show quick settings",
+            "go to quick settings",
+            "open the quick settings",
+            "show the quick settings"
+        )
+
+        if (command in quickSettingsCommands) {
+            return "open quick settings"
+        }
+
+        // --------------------------------------------------------
+        // OPEN APP
+        // --------------------------------------------------------
+
+        val appPrefixes = listOf(
+            "open ",
+            "launch ",
+            "start ",
+            "run ",
+            "open the app ",
+            "launch the app ",
+            "start the app ",
+            "open the ",
+            "launch the ",
+            "start the "
+        )
+
+        for (prefix in appPrefixes) {
+            if (command.startsWith(prefix)) {
+                val app = command
+                    .removePrefix(prefix)
+                    .trim()
+
+                if (app.isNotEmpty()) {
+                    return "open $app"
+                }
+            }
+        }
+
+        // Natural-language app requests.
+        val appPhrases = listOf(
+            "take me to ",
+            "go to ",
+            "bring up ",
+            "show me "
+        )
+
+        for (prefix in appPhrases) {
+            if (command.startsWith(prefix)) {
+                val target = command
+                    .removePrefix(prefix)
+                    .trim()
+
+                if (
+                    target.isNotEmpty() &&
+                    target != "home" &&
+                    target != "the home screen" &&
+                    target != "settings" &&
+                    target != "the settings"
+                ) {
+                    return "open $target"
+                }
+            }
+        }
+
+        // --------------------------------------------------------
+        // SEARCH WEB
+        // --------------------------------------------------------
+
+        val searchPrefixes = listOf(
+            "search the web for ",
+            "search web for ",
+            "search for ",
+            "look up ",
+            "look for ",
+            "find online ",
+            "google "
+        )
+
+        for (prefix in searchPrefixes) {
+            if (command.startsWith(prefix)) {
+                val query = command
+                    .removePrefix(prefix)
+                    .trim()
+
+                if (query.isNotEmpty()) {
+                    return "search $query"
+                }
+            }
+        }
+
+        // --------------------------------------------------------
+        // FALLBACK
+        // --------------------------------------------------------
+
+        return command
+    }
+
+    /**
+     * Phase 2 public entry point.
+     *
+     * Natural language is normalized locally and then passed
+     * through the existing deterministic command engine.
+     */
+    fun processNaturalLanguage(input: String): AuraActionResult {
+        val understood = understandNaturalLanguage(input)
+        return process(understood)
+    }
+
 }
 
 /**
