@@ -514,7 +514,24 @@ class AuraCommandEngine {
             }
         }
 
-        // Natural-language app requests.
+        // Natural-language app-reference aliases.
+        //
+        // These aliases make spoken references such as
+        // "the YouTube app" resolve to the same deterministic
+        // target already understood by the command engine.
+        val appReferenceAliases = mapOf(
+            "the youtube app" to "youtube",
+            "youtube app" to "youtube",
+            "the instagram app" to "instagram",
+            "instagram app" to "instagram",
+            "the whatsapp app" to "whatsapp",
+            "whatsapp app" to "whatsapp",
+            "the chrome app" to "chrome",
+            "chrome app" to "chrome",
+            "the gmail app" to "gmail",
+            "gmail app" to "gmail"
+        )
+
         val appPhrases = listOf(
             "take me to ",
             "take me into ",
@@ -532,9 +549,11 @@ class AuraCommandEngine {
 
         for (prefix in appPhrases) {
             if (command.startsWith(prefix)) {
-                val target = command
+                var target = command
                     .removePrefix(prefix)
                     .trim()
+
+                target = appReferenceAliases[target] ?: target
 
                 if (
                     target.isNotEmpty() &&
