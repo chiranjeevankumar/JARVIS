@@ -578,7 +578,20 @@ class AuraCommandEngine {
             "look up ",
             "look for ",
             "find online ",
-            "google "
+            "search online for ",
+            "search the internet for ",
+            "search internet for ",
+            "find on the web ",
+            "find on the internet ",
+            "find online for ",
+            "google ",
+            "google search ",
+            "do a web search for ",
+            "do an online search for ",
+            "can you search for ",
+            "can you look up ",
+            "please search for ",
+            "please look up "
         )
 
         for (prefix in searchPrefixes) {
