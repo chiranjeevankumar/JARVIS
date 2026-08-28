@@ -33,6 +33,33 @@ class AuraCommandEngine {
         // go to home screen
         // ----------------------------------------------------
 
+        // --------------------------------------------------------
+        // GO BACK
+        // --------------------------------------------------------
+        // Supported examples:
+        // go back
+        // back
+        // return
+        // take me back
+        // go to previous screen
+        // return to previous screen
+
+        val backCommands = setOf(
+            "go back",
+            "back",
+            "return",
+            "take me back",
+            "go to previous screen",
+            "return to previous screen"
+        )
+
+        if (cleanCommand in backCommands) {
+            return AuraActionResult(
+                action = AuraAction.GO_BACK,
+                message = "Going back."
+            )
+        }
+
         val homeCommands = setOf(
             "go home",
             "home",
@@ -865,6 +892,7 @@ object AuraAction {
     const val OPEN_SETTINGS = "OPEN_SETTINGS"
     const val OPEN_NOTIFICATIONS = "OPEN_NOTIFICATIONS"
     const val OPEN_QUICK_SETTINGS = "OPEN_QUICK_SETTINGS"
+    const val GO_BACK = "GO_BACK"
     const val TIME = "TIME"
     const val ANSWER = "ANSWER"
 }
