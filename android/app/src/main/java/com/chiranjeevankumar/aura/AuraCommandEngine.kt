@@ -517,9 +517,17 @@ class AuraCommandEngine {
         // Natural-language app requests.
         val appPhrases = listOf(
             "take me to ",
+            "take me into ",
             "go to ",
+            "go into ",
             "bring up ",
-            "show me "
+            "bring me to ",
+            "show me ",
+            "get me to ",
+            "get me into ",
+            "switch to ",
+            "switch over to ",
+            "open up "
         )
 
         for (prefix in appPhrases) {
