@@ -10,6 +10,7 @@ import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.provider.ContactsContract
 import android.os.Bundle
 import android.os.Build
 import android.speech.RecognizerIntent
@@ -364,6 +365,142 @@ override fun onRequestPermissionsResult(
                 }
 
                 startActivity(homeIntent)
+            }
+
+            AuraAction.CALL_CONTACT -> {
+
+                statusText.text =
+                    "AURA\n\nFinding:\n${result.target}"
+
+                try {
+
+                    val contactName = result.target.trim()
+
+                    val projection = arrayOf(
+                        ContactsContract.CommonDataKinds.Phone.NUMBER
+                    )
+
+                    // Use LIKE instead of exact equality because
+                    // spoken contact names may differ in case,
+                    // spacing, or minor formatting.
+                    val selection =
+                        "${ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME} LIKE ?"
+
+                    val selectionArgs =
+                        arrayOf("%$contactName%")
+
+                    var phoneNumber: String? = null
+
+                    contentResolver.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null
+                    )?.use { cursor ->
+
+                        if (cursor.moveToFirst()) {
+
+                            val numberIndex =
+                                cursor.getColumnIndex(
+                                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                                )
+
+                            if (numberIndex >= 0) {
+                                phoneNumber =
+                                    cursor.getString(numberIndex)
+                            }
+                        }
+                    }
+
+                    if (phoneNumber.isNullOrBlank()) {
+
+                        statusText.text =
+                            "AURA\n\nContact not found:\n$contactName"
+
+                        speak("I could not find $contactName")
+
+                    } else {
+
+                        val callIntent = Intent(
+                            Intent.ACTION_CALL,
+                            Uri.parse("tel:${phoneNumber}")
+                        )
+
+                        if (
+                            checkSelfPermission(
+                                Manifest.permission.CALL_PHONE
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+
+                            startActivity(callIntent)
+
+                            statusText.text =
+                                "AURA\n\nCalling:\n$contactName"
+
+                            speak("Calling $contactName")
+
+                        } else {
+
+                            statusText.text =
+                                "AURA\n\nCALL_PHONE permission is required."
+
+                            speak("Phone call permission is required.")
+                        }
+                    }
+
+                } catch (e: SecurityException) {
+
+                    Log.e(
+                        "AURA",
+                        "CALL_CONTACT permission denied",
+                        e
+                    )
+
+                    statusText.text =
+                        "AURA\n\nCALL_PHONE permission is required."
+
+                } catch (e: Exception) {
+
+                    Log.e(
+                        "AURA",
+                        "Contact call failed",
+                        e
+                    )
+
+                    statusText.text =
+                        "AURA\n\nUnable to call ${result.target}."
+                }
+            }
+
+            AuraAction.CALL_PHONE -> {
+                statusText.text =
+                    "AURA\\n\\n${result.message}"
+
+                try {
+                    val callIntent = Intent(
+                        Intent.ACTION_CALL,
+                        Uri.parse("tel:${result.target}")
+                    )
+
+                    startActivity(callIntent)
+
+                    speak(result.message)
+
+                } catch (e: SecurityException) {
+                    Log.e("AURA", "CALL_PHONE permission denied", e)
+
+                    statusText.text =
+                        "AURA\\n\\nUnable to make the call.\\n\\n" +
+                        "CALL_PHONE permission is required."
+
+                } catch (e: Exception) {
+                    Log.e("AURA", "Phone call failed", e)
+
+                    statusText.text =
+                        "AURA\\n\\nUnable to make the call."
+
+                }
             }
 
             AuraAction.TIME -> {

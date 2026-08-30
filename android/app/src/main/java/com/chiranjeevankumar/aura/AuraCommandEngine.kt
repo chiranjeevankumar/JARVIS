@@ -1,5 +1,7 @@
 package com.chiranjeevankumar.aura
 
+import android.provider.ContactsContract
+
 /**
  * AURA v0.7
  *
@@ -334,6 +336,90 @@ class AuraCommandEngine {
         // ----------------------------------------------------
         // UNKNOWN
         // ----------------------------------------------------
+
+        // ----------------------------------------------------
+        // CALL / DIAL — AURA v0.9 FEATURE 1
+        // ----------------------------------------------------
+        // Deterministic phone-number commands.
+        //
+        // Examples:
+        // call 12345
+        // dial 12345
+        // phone 12345
+        // call +919876543210
+        // ----------------------------------------------------
+
+        val callPrefixes = listOf(
+            "call ",
+            "phone ",
+            "dial "
+        )
+
+        for (prefix in callPrefixes) {
+            if (cleanCommand.startsWith(prefix)) {
+
+                val phoneNumber = command
+                    .trim()
+                    .substring(prefix.length)
+                    .trim()
+
+                val normalizedPhoneNumber = phoneNumber
+                    .replace(" ", "")
+                    .replace("-", "")
+                    .replace("(", "")
+                    .replace(")", "")
+
+                if (
+                    normalizedPhoneNumber.matches(
+                        Regex("^\\+?[0-9]{1,15}$")
+                    )
+                ) {
+                    return AuraActionResult(
+                        action = AuraAction.CALL_PHONE,
+                        target = normalizedPhoneNumber,
+                        message = "Calling"
+                    )
+                }
+            }
+        }
+
+
+        // ----------------------------------------------------
+        // CONTACT CALL — AURA v0.9 FEATURE 2A
+        // ----------------------------------------------------
+        // Examples:
+        // call mom
+        // call john
+        // dial dad
+        // phone brother
+        //
+        // Contact lookup is performed only when the target
+        // is not already a numeric phone number.
+        // ----------------------------------------------------
+
+        for (prefix in callPrefixes) {
+            if (cleanCommand.startsWith(prefix)) {
+
+                val contactName = command
+                    .trim()
+                    .substring(prefix.length)
+                    .trim()
+
+                if (
+                    contactName.isNotEmpty() &&
+                    !contactName.matches(
+                        Regex("^\\+?[0-9]{1,15}$")
+                    )
+                ) {
+                    return AuraActionResult(
+                        action = AuraAction.CALL_CONTACT,
+                        target = contactName,
+                        message = "Calling $contactName"
+                    )
+                }
+            }
+        }
+
 
         return AuraActionResult(
             action = AuraAction.ANSWER,
@@ -908,4 +994,6 @@ object AuraAction {
     const val GO_BACK = "GO_BACK"
     const val TIME = "TIME"
     const val ANSWER = "ANSWER"
+    const val CALL_PHONE = "CALL_PHONE"
+    const val CALL_CONTACT = "CALL_CONTACT"
 }
