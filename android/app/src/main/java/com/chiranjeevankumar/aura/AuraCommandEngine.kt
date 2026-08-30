@@ -420,6 +420,69 @@ class AuraCommandEngine {
             }
         }
 
+        // ----------------------------------------------------
+        // UNIVERSAL COMMUNICATION CALL ROUTING — AURA v0.9
+        // FEATURE 3A
+        // ----------------------------------------------------
+        //
+        // Examples:
+        // whatsapp call john
+        // call john on whatsapp
+        // instagram call john
+        // call john on instagram
+        // messenger call john
+        // call john on messenger
+        // facebook call john
+        // call john on facebook
+        // skype call john
+        // call john on skype
+        //
+        // This layer ONLY interprets the command.
+        // Actual Android app execution is handled by MainActivity.
+        // ----------------------------------------------------
+
+        val communicationApps = listOf(
+            "whatsapp",
+            "instagram",
+            "facebook",
+            "messenger",
+            "skype"
+        )
+
+        for (appName in communicationApps) {
+
+            val appCallPrefixes = listOf(
+                "$appName call ",
+                "call on $appName ",
+                "call $appName "
+            )
+
+            for (prefix in appCallPrefixes) {
+
+                if (cleanCommand.startsWith(prefix)) {
+
+                    val contactName = command
+                        .trim()
+                        .substring(prefix.length)
+                        .trim()
+
+                    if (
+                        contactName.isNotEmpty() &&
+                        !contactName.matches(
+                            Regex("^\\+?[0-9]{1,15}$")
+                        )
+                    ) {
+                        return AuraActionResult(
+                            action = AuraAction.COMMUNICATION_CALL,
+                            target = contactName,
+                            app = appName,
+                            message = "Calling $contactName on $appName"
+                        )
+                    }
+                }
+            }
+        }
+
 
         return AuraActionResult(
             action = AuraAction.ANSWER,
@@ -971,13 +1034,51 @@ class AuraCommandEngine {
 
 }
 
+
+/**
+ * AURA v0.9 Feature 4A
+ *
+ * Universal communication request.
+ *
+ * This model describes WHAT the user wants.
+ * It does not execute any Android action.
+ */
+data class CommunicationRequest(
+    val targetName: String = "",
+    val phoneNumber: String = "",
+    val app: CommunicationApp = CommunicationApp.PHONE,
+    val type: CommunicationType = CommunicationType.VOICE
+)
+
+/**
+ * Communication applications supported by AURA.
+ */
+enum class CommunicationApp {
+    PHONE,
+    WHATSAPP,
+    INSTAGRAM,
+    FACEBOOK,
+    MESSENGER,
+    SKYPE
+}
+
+/**
+ * Communication call types supported by AURA.
+ */
+enum class CommunicationType {
+    VOICE,
+    VIDEO
+}
+
+
 /**
  * Structured result returned by AuraCommandEngine.
  */
 data class AuraActionResult(
     val action: String,
     val target: String = "",
-    val message: String = ""
+    val message: String = "",
+    val app: String = ""
 )
 
 /**
@@ -996,4 +1097,5 @@ object AuraAction {
     const val ANSWER = "ANSWER"
     const val CALL_PHONE = "CALL_PHONE"
     const val CALL_CONTACT = "CALL_CONTACT"
+    const val COMMUNICATION_CALL = "COMMUNICATION_CALL"
 }
