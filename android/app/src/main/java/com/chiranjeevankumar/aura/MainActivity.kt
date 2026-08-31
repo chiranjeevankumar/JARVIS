@@ -34,9 +34,26 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 // AURA v0.7 PART 1B-B
     // Native deterministic command engine.
     private val commandEngine = AuraCommandEngine()
+
+    // AURA v0.9 FEATURE 4E-4I
+    // Android sends AI requests only to the AURA backend.
+    // Gemini credentials remain server-side.
+    private val geminiProvider: AuraAIProvider by lazy {
+        GeminiAIProvider(
+            backendUrl =
+                "https://computation-anthropology-dna-meditation.trycloudflare.com",
+            userId = null
+        )
+    }
 private lateinit var statusText: TextView
     private lateinit var commandInput: EditText
     private lateinit var voiceInputButton: Button
+
+    // AURA v0.9 FEATURE 4E-2A
+    // Dedicated AI chat tool.
+    // Separate from the command execution path.
+    private lateinit var chatInput: EditText
+    private lateinit var chatResponseText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -238,6 +255,77 @@ override fun onRequestPermissionsResult(
         layout.addView(sendButton)
         layout.addView(voiceInputButton)
 
+        // ====================================================
+        // AURA v0.9 FEATURE 4E-2A
+        // SEPARATE AI CHAT TOOL
+        // ====================================================
+
+        val chatTitle = TextView(this).apply {
+            text = "AI CHAT"
+            textSize = 22f
+            setPadding(0, 40, 0, 10)
+        }
+
+        val chatSubtitle = TextView(this).apply {
+            text = "Ask AURA anything"
+            textSize = 16f
+        }
+
+        chatInput = EditText(this).apply {
+            hint = "Ask a question or write something..."
+            textSize = 18f
+            minLines = 3
+            maxLines = 6
+            gravity = android.view.Gravity.TOP
+        }
+
+        val chatButton = Button(this).apply {
+            text = "ASK AURA"
+            textSize = 18f
+        }
+
+        chatResponseText = TextView(this).apply {
+            text = "AI Chat ready."
+            textSize = 18f
+            setPadding(0, 24, 0, 24)
+        }
+
+        chatButton.setOnClickListener {
+
+            val message = chatInput.text.toString().trim()
+
+            if (message.isEmpty()) {
+                chatResponseText.text =
+                    "Please enter a message."
+                return@setOnClickListener
+            }
+
+            chatResponseText.text =
+                "AURA\n\nThinking..."
+
+            sendChatMessage(message)
+        }
+
+        layout.addView(chatTitle)
+        layout.addView(chatSubtitle)
+
+        layout.addView(
+            chatInput,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        layout.addView(chatButton)
+
+        layout.addView(
+            chatResponseText,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
 
         layout.addView(
             statusText,
@@ -264,11 +352,103 @@ override fun onRequestPermissionsResult(
         )
     }
 
+    // ====================================================
+    // AURA v0.9 FEATURE 4E-2A
+    // DEDICATED AI CHAT
+    // ====================================================
+
+    private fun sendChatMessage(message: String) {
+
+        Log.d(
+            "AURA_CHAT",
+            "CHAT MESSAGE=$message"
+        )
+
+        chatResponseText.text =
+            "AURA\n\nThinking..."
+
+        geminiProvider.sendMessage(
+            message
+        ) { result ->
+
+            runOnUiThread {
+
+                result.fold(
+
+                    onSuccess = { response ->
+
+                        chatResponseText.text =
+                            "AURA\n\n$response"
+
+                        speak(response)
+                    },
+
+                    onFailure = { error ->
+
+                        chatResponseText.text =
+                            "AURA\n\nAI error:\n" +
+                            (
+                                error.message
+                                    ?: error.javaClass.simpleName
+                            )
+                    }
+                )
+            }
+        }
+    }
+
     private fun sendCommand(command: String) {
 
         Log.d("AURA", "LOCAL COMMAND=$command")
 
         val result = commandEngine.processNaturalLanguage(command)
+
+        // ====================================================
+        // AURA v0.9 FEATURE 4E-1C-A
+        // GENERAL AI CHAT FALLBACK
+        // ====================================================
+        //
+        // Existing deterministic Android commands continue
+        // through AuraCommandEngine.
+        //
+        // General questions, writing, explanations, and
+        // problem-solving are forwarded to Gemini.
+        // ====================================================
+
+        if (result.action == AuraAction.ANSWER) {
+
+            statusText.text =
+                "AURA\n\nThinking..."
+
+            geminiProvider.sendMessage(
+                command
+            ) { response ->
+
+                runOnUiThread {
+
+                    response.fold(
+
+                        onSuccess = { answer ->
+
+                            statusText.text =
+                                "AURA\n\n$answer"
+
+                            speak(answer)
+                        },
+
+                        onFailure = { error ->
+
+                            statusText.text =
+                                "AURA\n\nAI error:\n" +
+                                (error.message
+                                    ?: error.javaClass.simpleName)
+                        }
+                    )
+                }
+            }
+
+            return
+        }
 
         when (result.action) {
 
