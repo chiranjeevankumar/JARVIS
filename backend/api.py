@@ -2,19 +2,22 @@
 AURA Backend API
 ================
 
-Minimal server foundation for the AURA account + AI architecture.
+Backend foundation for the AURA account + AI architecture.
 
 IMPORTANT:
-- No Gemini API key is stored here.
-- No Gemini API call is made here yet.
+- Gemini API key is read only from the server environment.
+- No Gemini API key is accepted from the client.
+- No Gemini API key is stored in source code.
 - Android is not modified by this module.
 """
 
+import os
 from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel
+from google import genai
 
 
 app = FastAPI(
@@ -42,6 +45,17 @@ class ChatResponse(BaseModel):
     user_id: Optional[str] = None
 
 
+def get_gemini_client():
+    """Create a Gemini client using the server-side environment key."""
+
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+
+    if not api_key:
+        return None
+
+    return genai.Client(api_key=api_key)
+
+
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     """Return backend health information."""
@@ -58,13 +72,7 @@ def health() -> HealthResponse:
 
 @app.post("/api/chat", response_model=ChatResponse)
 def chat(request: ChatRequest) -> ChatResponse:
-    """
-    Temporary chat endpoint.
-
-    Gemini integration will be added in a later controlled
-    checkpoint. This endpoint intentionally does not contain
-    or request a Gemini API key from the client.
-    """
+    """Send a user message to Gemini using the server-side API key."""
 
     message = request.message.strip()
 
@@ -75,11 +83,39 @@ def chat(request: ChatRequest) -> ChatResponse:
             user_id=request.user_id,
         )
 
-    return ChatResponse(
-        success=True,
-        message=(
-            "AURA backend received your message. "
-            "AI provider integration is not enabled yet."
-        ),
-        user_id=request.user_id,
-    )
+    client = get_gemini_client()
+
+    if client is None:
+        return ChatResponse(
+            success=False,
+            message="AI service is not configured.",
+            user_id=request.user_id,
+        )
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=message,
+        )
+
+        text = (response.text or "").strip()
+
+        if not text:
+            return ChatResponse(
+                success=False,
+                message="AI service returned an empty response.",
+                user_id=request.user_id,
+            )
+
+        return ChatResponse(
+            success=True,
+            message=text,
+            user_id=request.user_id,
+        )
+
+    except Exception as e:
+        return ChatResponse(
+            success=False,
+            message=f"AI service request failed: {type(e).__name__}: {e}",
+            user_id=request.user_id,
+        )
