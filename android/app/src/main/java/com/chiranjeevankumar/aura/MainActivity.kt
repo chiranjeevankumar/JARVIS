@@ -18,6 +18,7 @@ import android.speech.tts.TextToSpeech
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import org.json.JSONObject
 import kotlin.concurrent.thread
@@ -41,7 +42,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private val geminiProvider: AuraAIProvider by lazy {
         GeminiAIProvider(
             backendUrl =
-                "https://computation-anthropology-dna-meditation.trycloudflare.com",
+                "https://experiments-featured-full-cole.trycloudflare.com",
             userId = null
         )
     }
@@ -290,6 +291,17 @@ override fun onRequestPermissionsResult(
             setPadding(0, 24, 0, 24)
         }
 
+        val chatResponseScroll = ScrollView(this).apply {
+            isFillViewport = true
+            addView(
+                chatResponseText,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            )
+        }
+
         chatButton.setOnClickListener {
 
             val message = chatInput.text.toString().trim()
@@ -320,10 +332,11 @@ override fun onRequestPermissionsResult(
         layout.addView(chatButton)
 
         layout.addView(
-            chatResponseText,
+            chatResponseScroll,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                0,
+                1f
             )
         )
 
