@@ -15,15 +15,15 @@ import os
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 from google import genai
 
 
 app = FastAPI(
-    title="AURA Backend API",
-    version="0.9.0",
-    description="Backend foundation for AURA.",
+    title="AURA API",
+    version="1.0.0",
+    description="The official AURA personal AI API.",
 )
 
 
@@ -62,17 +62,54 @@ def health() -> HealthResponse:
 
     return HealthResponse(
         status="ok",
-        service="AURA Backend",
-        version="0.9.0",
+        service="AURA API",
+        version="1.0.0",
         timestamp=datetime.now(
             timezone.utc
         ).isoformat(),
     )
 
 
-@app.post("/api/chat", response_model=ChatResponse)
-def chat(request: ChatRequest) -> ChatResponse:
-    """Send a user message to Gemini using the server-side API key."""
+@app.get("/v1/status", response_model=HealthResponse)
+def aura_status() -> HealthResponse:
+    """Return official AURA API status."""
+
+    return HealthResponse(
+        status="ok",
+        service="AURA API",
+        version="1.0.0",
+        timestamp=datetime.now(
+            timezone.utc
+        ).isoformat(),
+    )
+
+
+@app.post("/v1/chat", response_model=ChatResponse)
+def aura_chat(
+    request: ChatRequest,
+    authorization: Optional[str] = Header(default=None),
+) -> ChatResponse:
+
+    """Send a message through AURA to the internal AI provider."""
+
+    expected_key = os.environ.get("AURA_API_KEY", "").strip()
+
+    if not expected_key:
+        raise HTTPException(
+            status_code=503,
+            detail="AURA API authentication is not configured.",
+        )
+
+    supplied_key = ""
+
+    if authorization and authorization.startswith("Bearer "):
+        supplied_key = authorization[7:].strip()
+
+    if supplied_key != expected_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid AURA API key.",
+        )
 
     message = request.message.strip()
 
@@ -88,7 +125,7 @@ def chat(request: ChatRequest) -> ChatResponse:
     if client is None:
         return ChatResponse(
             success=False,
-            message="AI service is not configured.",
+            message="AURA AI provider is not configured.",
             user_id=request.user_id,
         )
 
@@ -116,6 +153,6 @@ def chat(request: ChatRequest) -> ChatResponse:
     except Exception as e:
         return ChatResponse(
             success=False,
-            message=f"AI service request failed: {type(e).__name__}: {e}",
+            message=f"AURA AI provider request failed: {type(e).__name__}: {e}",
             user_id=request.user_id,
         )
