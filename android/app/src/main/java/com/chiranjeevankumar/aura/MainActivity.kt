@@ -257,6 +257,39 @@ override fun onRequestPermissionsResult(
         layout.addView(voiceInputButton)
 
         // ====================================================
+        // AURA v0.9 STEP 12P-R2-S2
+        // NATIVE CHAT TOOL BUTTON
+        // ====================================================
+
+        val chatToolButton = android.widget.ImageButton(this).apply {
+            setImageResource(R.drawable.aura_chat_logo)
+            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+            contentDescription = "Chat Tool"
+            isClickable = true
+            isFocusable = true
+            setPadding(0, 0, 0, 0)
+
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+            }
+
+            clipToOutline = true
+            outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
+        }
+
+        layout.addView(
+            chatToolButton,
+            LinearLayout.LayoutParams(
+                260,
+                260
+            ).apply {
+                gravity = android.view.Gravity.CENTER
+                topMargin = 20
+                bottomMargin = 20
+            }
+        )
+
+        // ====================================================
         // AURA v0.9 FEATURE 4E-2A
         // SEPARATE AI CHAT TOOL
         // ====================================================
