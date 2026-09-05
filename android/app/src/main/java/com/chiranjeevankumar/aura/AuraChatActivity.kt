@@ -58,6 +58,9 @@ class AuraChatActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        requestedOrientation =
+            android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
         window.statusBarColor = background
         window.navigationBarColor = background
 
