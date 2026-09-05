@@ -277,6 +277,15 @@ override fun onRequestPermissionsResult(
             outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
         }
 
+        chatToolButton.setOnClickListener {
+            startActivity(
+                android.content.Intent(
+                    this@MainActivity,
+                    AuraChatActivity::class.java
+                )
+            )
+        }
+
         layout.addView(
             chatToolButton,
             LinearLayout.LayoutParams(
