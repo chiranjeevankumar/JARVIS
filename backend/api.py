@@ -17,7 +17,6 @@ from typing import Optional
 
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
-from google import genai
 
 from brain.agent import AURAAgent
 from brain.gemini_provider import GeminiProvider
@@ -47,17 +46,6 @@ class ChatResponse(BaseModel):
     success: bool
     message: str
     user_id: Optional[str] = None
-
-
-def get_gemini_client():
-    """Create a Gemini client using the server-side environment key."""
-
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-
-    if not api_key:
-        return None
-
-    return genai.Client(api_key=api_key)
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -177,8 +165,6 @@ def aura_chat(
     # configured internal AI provider.
     # --------------------------------------------------------
 
-    client = get_gemini_client()
-
     if client is None:
         return ChatResponse(
             success=False,
@@ -187,10 +173,6 @@ def aura_chat(
         )
 
     try:
-        response = client.models.generate_content(
-            model="gemini-3.5-flash-lite",
-            contents=message,
-        )
 
         text = (response.text or "").strip()
 
