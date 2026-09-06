@@ -19,6 +19,9 @@ from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 from google import genai
 
+from brain.agent import AURAAgent
+from tools.registry import ToolRegistry
+
 
 app = FastAPI(
     title="AURA API",
@@ -119,6 +122,55 @@ def aura_chat(
             message="Message cannot be empty.",
             user_id=request.user_id,
         )
+
+    # --------------------------------------------------------
+    # AURA brain first
+    #
+    # Deterministic AURA capabilities such as memory and
+    # commands must remain owned by AURA itself.
+    # --------------------------------------------------------
+
+    try:
+        registry = ToolRegistry()
+        agent = AURAAgent(registry=registry)
+
+        agent_response = agent.run(message)
+
+        # AURA-native operations such as memory save/recall
+        # intentionally return without an execution plan.
+        # Planned commands have a non-unknown intent.
+        aura_handled = (
+            (
+                agent_response.plan is None
+                and agent_response.success
+            )
+            or (
+                agent_response.plan is not None
+                and agent_response.plan.intent.name != "unknown"
+            )
+        )
+
+        if aura_handled:
+            return ChatResponse(
+                success=agent_response.success,
+                message=agent_response.message,
+                user_id=request.user_id,
+            )
+
+    except Exception as e:
+        return ChatResponse(
+            success=False,
+            message=(
+                "AURA brain request failed: "
+                f"{type(e).__name__}: {e}"
+            ),
+            user_id=request.user_id,
+        )
+
+    # --------------------------------------------------------
+    # Unknown conversation currently falls through to the
+    # configured internal AI provider.
+    # --------------------------------------------------------
 
     client = get_gemini_client()
 
