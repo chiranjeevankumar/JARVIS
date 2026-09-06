@@ -295,14 +295,41 @@ class AURAAgent:
 
         if intent.name == "unknown":
 
-            return AgentResponse(
-                message=(
-                    "I don't understand that instruction yet."
-                ),
-                success=False,
-                plan=plan,
-                results=[]
-            )
+            # ------------------------------------------------
+            # Internal AI provider fallback
+            #
+            # AURA remains the client-facing API.
+            # The provider is an internal implementation detail.
+            # ------------------------------------------------
+
+            try:
+                ai_result = self.ai_provider.understand(text)
+
+                if ai_result.success:
+                    return AgentResponse(
+                        message=ai_result.explanation,
+                        success=True,
+                        plan=plan,
+                        results=[]
+                    )
+
+                return AgentResponse(
+                    message=ai_result.explanation,
+                    success=False,
+                    plan=plan,
+                    results=[]
+                )
+
+            except Exception as error:
+                return AgentResponse(
+                    message=(
+                        "AURA internal AI provider failed: "
+                        f"{type(error).__name__}: {error}"
+                    ),
+                    success=False,
+                    plan=plan,
+                    results=[]
+                )
 
         # ----------------------------------------------------
         # Execute

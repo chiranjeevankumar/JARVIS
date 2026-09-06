@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from google import genai
 
 from brain.agent import AURAAgent
+from brain.gemini_provider import GeminiProvider
 from tools.registry import ToolRegistry
 
 
@@ -132,7 +133,11 @@ def aura_chat(
 
     try:
         registry = ToolRegistry()
-        agent = AURAAgent(registry=registry)
+        ai_provider = GeminiProvider()
+        agent = AURAAgent(
+            registry=registry,
+            ai_provider=ai_provider,
+        )
 
         agent_response = agent.run(message)
 
