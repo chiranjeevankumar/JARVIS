@@ -161,37 +161,13 @@ def aura_chat(
         )
 
     # --------------------------------------------------------
-    # Unknown conversation currently falls through to the
-    # configured internal AI provider.
+    # AURAAgent already owns the internal AI-provider fallback.
+    # If execution reaches this point, return the agent response
+    # directly rather than invoking a second obsolete fallback.
     # --------------------------------------------------------
 
-    if client is None:
-        return ChatResponse(
-            success=False,
-            message="AURA AI provider is not configured.",
-            user_id=request.user_id,
-        )
-
-    try:
-
-        text = (response.text or "").strip()
-
-        if not text:
-            return ChatResponse(
-                success=False,
-                message="AI service returned an empty response.",
-                user_id=request.user_id,
-            )
-
-        return ChatResponse(
-            success=True,
-            message=text,
-            user_id=request.user_id,
-        )
-
-    except Exception as e:
-        return ChatResponse(
-            success=False,
-            message=f"AURA AI provider request failed: {type(e).__name__}: {e}",
-            user_id=request.user_id,
-        )
+    return ChatResponse(
+        success=agent_response.success,
+        message=agent_response.message,
+        user_id=request.user_id,
+    )
