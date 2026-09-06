@@ -25,6 +25,7 @@ from tools.bootstrap import register_builtin_tools
 
 from memory.context_manager import ConversationContext
 from brain.followup_integration import FollowUpIntegration
+from brain.ai_provider import AIProvider, FallbackProvider
 
 
 class AURAAgent:
@@ -33,10 +34,17 @@ class AURAAgent:
         self,
         registry: ToolRegistry,
         memory_manager: MemoryManager = None,
-        safety_engine: SafetyEngine = None
+        safety_engine: SafetyEngine = None,
+        ai_provider: AIProvider = None
     ):
 
         self.registry = registry
+
+        self.ai_provider = (
+            ai_provider
+            if ai_provider is not None
+            else FallbackProvider()
+        )
 
         register_builtin_tools(
             self.registry
