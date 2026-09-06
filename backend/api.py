@@ -19,7 +19,7 @@ from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
 from brain.agent import AURAAgent
-from brain.gemini_provider import GeminiProvider
+from brain.provider_factory import create_ai_provider
 from tools.registry import ToolRegistry
 
 
@@ -121,7 +121,7 @@ def aura_chat(
 
     try:
         registry = ToolRegistry()
-        ai_provider = GeminiProvider()
+        ai_provider = create_ai_provider()
         agent = AURAAgent(
             registry=registry,
             ai_provider=ai_provider,
